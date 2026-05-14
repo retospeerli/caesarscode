@@ -172,44 +172,56 @@ function updateWheel() {
   shiftInput.value = shift;
 
   const degrees = shift * (360 / 26);
-  innerRing.style.transform = `rotate(${degrees}deg)`;
+
+  /*
+    Wichtig:
+    Die innere Scheibe wird gegen den Uhrzeigersinn gedreht.
+    So liegt bei Verschiebung 3 das innere D beim äußeren A.
+  */
+  innerRing.style.transform = `rotate(${-degrees}deg)`;
 }
 
 function clearHighlights() {
-  outerLetters.forEach(letter => letter.classList.remove("highlightLetter"));
-  innerLetters.forEach(letter => letter.classList.remove("highlightLetter"));
+  outerLetters.forEach(letter => {
+    letter.classList.remove("clearHighlight");
+  });
+
+  innerLetters.forEach(letter => {
+    letter.classList.remove("cipherHighlight");
+  });
 }
 
 function highlightPair(clearIndex, cipherIndex) {
   clearHighlights();
 
   if (outerLetters[clearIndex]) {
-    outerLetters[clearIndex].classList.add("highlightLetter");
+    outerLetters[clearIndex].classList.add("clearHighlight");
   }
 
   if (innerLetters[cipherIndex]) {
-    innerLetters[cipherIndex].classList.add("highlightLetter");
+    innerLetters[cipherIndex].classList.add("cipherHighlight");
   }
 }
 
-function sleepDynamic() {
-  return new Promise(resolve => {
-    const speed = Number(speedRange.value);
-    const duration = 1000 / speed;
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    setTimeout(resolve, duration);
-  });
+function sleepDynamic() {
+  const speed = Number(speedRange.value);
+  const duration = 1000 / speed;
+  return sleep(duration);
 }
 
 function waitForStep() {
   return new Promise(resolve => {
     stepResolver = resolve;
+    stepBtn.disabled = false;
   });
 }
 
 function waitAccordingToControls() {
   if (stepMode.checked) {
-    stepBtn.disabled = false;
     return waitForStep();
   }
 
@@ -240,9 +252,17 @@ function setShiftFromPointer(event) {
   updateWheel();
 }
 
-function rotateOneStepForward() {
+async function rotateOneStepForPlus() {
+  clearHighlights();
+
   shift = normalizeShift(shift + 1);
   updateWheel();
+
+  if (stepMode.checked) {
+    await waitForStep();
+  } else {
+    await sleep(320);
+  }
 }
 
 async function animateEncrypt() {
@@ -271,14 +291,12 @@ async function animateEncrypt() {
 
     highlightPair(clearIndex, cipherIndex);
 
-    const encryptedChar = caesarChar(char, shift);
-    cipherText.value += encryptedChar;
+    cipherText.value += caesarChar(char, shift);
 
     await waitAccordingToControls();
 
     if (appMode === "plus") {
-      rotateOneStepForward();
-      await waitAccordingToControls();
+      await rotateOneStepForPlus();
     }
   }
 
@@ -313,14 +331,12 @@ async function animateDecrypt() {
 
     highlightPair(clearIndex, cipherIndex);
 
-    const decryptedChar = caesarChar(char, -shift);
-    plainText.value += decryptedChar;
+    plainText.value += caesarChar(char, -shift);
 
     await waitAccordingToControls();
 
     if (appMode === "plus") {
-      rotateOneStepForward();
-      await waitAccordingToControls();
+      await rotateOneStepForPlus();
     }
   }
 
