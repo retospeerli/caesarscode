@@ -1,93 +1,222 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cäsar-Verschlüsselung Animation</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cäsar-Verschlüsselung</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="setupModal" class="modal">
-  <div class="modalCard">
-    <h2>Startoptionen</h2>
 
-    <label for="modeSelect">Verfahren</label>
+<div id="setupModal" class="modal">
+
+  <div class="modalCard">
+
+    <h2>Modus wählen</h2>
+
+    <label for="modeSelect">
+      Verfahren
+    </label>
+
     <select id="modeSelect">
-      <option value="classic">Cäsars Rad klassisch</option>
-      <option value="plus">Cäsars Rad Plus</option>
+
+      <option value="classic">
+        Cäsars Rad klassisch
+      </option>
+
+      <option value="plus">
+        Cäsars Rad Plus
+      </option>
+
     </select>
 
-    <p class="modalText">
-      Bei „Plus“ dreht sich die innere Scheibe nach jedem Buchstaben um eine Position weiter.
-    </p>
+    <button id="startAppBtn">
+      Start
+    </button>
 
-    <button id="startAppBtn">App starten</button>
   </div>
+
 </div>
+
+
+
 
 <main class="app">
 
+
   <header class="hero">
+
     <div>
-      <h1>Cäsar-Verschlüsselung</h1>
-      <p>Drehe die innere Scheibe oder stelle die Verschiebung direkt ein.</p>
+
+      <h1>
+        Cäsar-Verschlüsselung
+      </h1>
+
+      <p>
+        Drehe die innere Scheibe oder stelle die Verschiebung direkt ein.
+      </p>
+
     </div>
+
 
     <div class="shiftBox">
-      <label for="shiftInput">Verschiebung</label>
-      <input id="shiftInput" type="number" min="0" max="25" value="3">
+
+      <label for="shiftInput">
+        Verschiebung
+      </label>
+
+      <input
+        id="shiftInput"
+        type="number"
+        min="0"
+        max="25"
+        value="3"
+      >
+
     </div>
+
   </header>
 
+
+
+
+
   <section class="controlBar">
+
     <div class="speedControl">
-      <label for="speedRange">Geschwindigkeit</label>
-      <input id="speedRange" type="range" min="1" max="10" value="3">
-      <span id="speedValue">3 Zeichen/Sek.</span>
+
+      <label for="speedRange">
+        Geschwindigkeit
+      </label>
+
+      <input
+        id="speedRange"
+        type="range"
+        min="1"
+        max="10"
+        value="3"
+      >
+
+      <span id="speedValue">
+        3 Zeichen/Sek.
+      </span>
+
     </div>
 
+
+
     <label class="stepToggle">
-      <input id="stepMode" type="checkbox">
+
+      <input
+        id="stepMode"
+        type="checkbox"
+      >
+
       Einzelschritte
+
     </label>
 
-    <button id="stepBtn" disabled>Nächster Schritt</button>
+
+
+    <button
+      id="stepBtn"
+      disabled
+    >
+      Nächster Schritt
+    </button>
+
+
   </section>
+
+
+
+
+
 
   <section class="workspace">
 
+
+
     <section class="panel">
-      <h2>Klartext</h2>
-      <textarea id="plainText" placeholder="Klartext eingeben oder&#10;einfügen ..."></textarea>
-      <button id="encryptBtn">Verschlüsseln ↘</button>
+
+      <h2>
+        Klartext
+      </h2>
+
+      <textarea
+        id="plainText"
+      ></textarea>
+
+      <button id="encryptBtn">
+        Verschlüsseln ↘
+      </button>
+
     </section>
+
+
+
+
+
 
     <section class="wheelCard">
-      <div id="wheel" class="wheel">
-        <div id="outerRing" class="outerRing"></div>
-        <div id="innerRing" class="innerRing"></div>
+
+      <div
+        id="wheel"
+        class="wheel"
+      >
+
+        <div
+          id="outerRing"
+          class="outerRing"
+        ></div>
+
+
+        <div
+          id="innerRing"
+          class="innerRing"
+        ></div>
+
+
         <div class="innerHole"></div>
+
         <div class="centerDot"></div>
-        <div class="hint">ziehen</div>
+
       </div>
 
-      <div class="wheelInfo">
-        Ziehe am inneren Ring,<br>
-        um das Alphabet zu verschieben.
-      </div>
     </section>
+
+
+
+
+
 
     <section class="panel">
-      <h2>Verschlüsselte Nachricht</h2>
-      <textarea id="cipherText" placeholder="Geheimtext eingeben oder&#10;einfügen ..."></textarea>
-      <button id="decryptBtn">Entschlüsseln ↙</button>
+
+      <h2>
+        Verschlüsselte Nachricht
+      </h2>
+
+      <textarea
+        id="cipherText"
+      ></textarea>
+
+      <button id="decryptBtn">
+        Entschlüsseln ↙
+      </button>
+
     </section>
+
+
+
 
   </section>
 
+
 </main>
 
+
 <script src="app.js"></script>
+
 </body>
 </html>
