@@ -1,0 +1,35 @@
+.highlightLetter{
+  color:#16a34a !important;
+  transform:translate(-50%,-50%) scale(1.25) !important;
+}
+
+.innerRing{
+  transition:transform 0.45s ease;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:grid;
+  place-items:center;
+  z-index:999;
+}
+
+.modalCard{
+  width:400px;
+  background:white;
+  border-radius:20px;
+  padding:30px;
+  color:black;
+}
+
+.modalCard select,
+.modalCard button{
+  width:100%;
+  margin-top:15px;
+}
+
+.stepBtn{
+  margin-top:20px;
+}
