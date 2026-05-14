@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cäsar Animation</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+<div id="setupModal" class="modal">
+
+  <div class="modalCard">
+
+    <h2>Animationsmodus</h2>
+
+    <label>Verfahren</label>
+
+    <select id="modeSelect">
+      <option value="classic">Cäsars Rad klassisch</option>
+      <option value="plus">Cäsars Rad Plus</option>
+    </select>
+
+
+    <label>Geschwindigkeit</label>
+
+    <select id="speedSelect">
+      <option value="1">1 Zeichen/Sek.</option>
+      <option value="2">2 Zeichen/Sek.</option>
+      <option value="3">3 Zeichen/Sek.</option>
+      <option value="5">5 Zeichen/Sek.</option>
+      <option value="10">10 Zeichen/Sek.</option>
+      <option value="step">Einzelschritte</option>
+    </select>
+
+
+    <button id="startAppBtn">
+      Start
+    </button>
+
+  </div>
+
+</div>
+
+
+<main class="app">
+
+  <header class="hero">
+
+    <div>
+
+      <h1>Cäsar-Verschlüsselung</h1>
+
+      <p>
+        Drehe die innere Scheibe oder stelle die Verschiebung direkt ein.
+      </p>
+
+    </div>
+
+    <div class="shiftBox">
+
+      <label>Verschiebung</label>
+
+      <input
+        id="shiftInput"
+        type="number"
+        min="0"
+        max="25"
+        value="3"
+      >
+
+    </div>
+
+  </header>
+
+
+  <section class="workspace">
+
+    <section class="panel">
+
+      <h2>Klartext</h2>
+
+      <textarea id="plainText"></textarea>
+
+      <button id="encryptBtn">
+        Verschlüsseln ↘
+      </button>
+
+    </section>
+
+
+
+    <section class="wheelCard">
+
+      <div id="wheel" class="wheel">
+
+        <div id="outerRing" class="outerRing"></div>
+
+        <div id="innerRing" class="innerRing"></div>
+
+        <div class="innerHole"></div>
+
+        <div class="centerDot"></div>
+
+      </div>
+
+
+      <button
+        id="stepBtn"
+        class="stepBtn"
+      >
+        Nächster Schritt
+      </button>
+
+    </section>
+
+
+
+
+    <section class="panel">
+
+      <h2>Verschlüsselte Nachricht</h2>
+
+      <textarea id="cipherText"></textarea>
+
+      <button id="decryptBtn">
+        Entschlüsseln ↙
+      </button>
+
+    </section>
+
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+
+</body>
+</html>
