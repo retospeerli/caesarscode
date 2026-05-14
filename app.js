@@ -1,88 +1,387 @@
-const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const plainText=document.getElementById("plainText");
-const cipherText=document.getElementById("cipherText");
+const plainText = document.getElementById("plainText");
+const cipherText = document.getElementById("cipherText");
 
-const encryptBtn=document.getElementById("encryptBtn");
-const decryptBtn=document.getElementById("decryptBtn");
+const encryptBtn = document.getElementById("encryptBtn");
+const decryptBtn = document.getElementById("decryptBtn");
 
-const shiftInput=document.getElementById("shiftInput");
+const shiftInput = document.getElementById("shiftInput");
 
-const wheel=document.getElementById("wheel");
-const outerRing=document.getElementById("outerRing");
-const innerRing=document.getElementById("innerRing");
+const wheel = document.getElementById("wheel");
+const outerRing = document.getElementById("outerRing");
+const innerRing = document.getElementById("innerRing");
 
-const speedRange=document.getElementById("speedRange");
-const speedValue=document.getElementById("speedValue");
+const speedRange = document.getElementById("speedRange");
+const speedValue = document.getElementById("speedValue");
 
-const stepMode=document.getElementById("stepMode");
-const stepBtn=document.getElementById("stepBtn");
+const stepMode = document.getElementById("stepMode");
+const stepBtn = document.getElementById("stepBtn");
 
-const modeSelect=document.getElementById("modeSelect");
-const startAppBtn=document.getElementById("startAppBtn");
-const setupModal=document.getElementById("setupModal");
-
-
-let shift=3;
-let startShift=3;
-
-let appMode="classic";
-
-let outerLetters=[];
-let innerLetters=[];
-
-let dragging=false;
-
-let waitingResolver=null;
-
-let isAnimating=false;
+const modeSelect = document.getElementById("modeSelect");
+const startAppBtn = document.getElementById("startAppBtn");
+const setupModal = document.getElementById("setupModal");
 
 
+let shift = 3;
+let startShift = 3;
 
-startAppBtn.onclick=()=>{
+let appMode = "classic";
 
-  appMode=
-  modeSelect.value;
+let dragging = false;
 
-  setupModal.style.display=
-  "none";
+let isAnimating = false;
 
-};
+let stepResolver = null;
+
+let outerLetters = [];
+let innerLetters = [];
 
 
 
+/* ===================================== */
 
-function normalize(v){
+function normalizeShift(v){
 
-  return ((v%26)+26)%26;
+  return ((v % 26)+26)%26;
 
 }
 
 
 
-function sleep(ms){
+/* ===================================== */
 
-  return new Promise(
-    resolve=>setTimeout(
-      resolve,
-      ms
-    )
+function polarPosition(
+  size,
+  radius,
+  angleDeg
+){
+
+  const rad =
+  angleDeg *
+  Math.PI /
+  180;
+
+  return {
+
+    x:
+    size/2 +
+    Math.sin(rad) *
+    radius,
+
+    y:
+    size/2 -
+    Math.cos(rad) *
+    radius
+
+  };
+
+}
+
+
+
+/* ===================================== */
+
+function createLetter(
+  parent,
+  char,
+  className,
+  radius,
+  angle,
+  size
+){
+
+  const pos =
+  polarPosition(
+    size,
+    radius,
+    angle
+  );
+
+
+  const letter =
+  document.createElement(
+    "div"
+  );
+
+
+  letter.className =
+  `letter ${className}`;
+
+
+  letter.textContent =
+  char;
+
+
+  letter.style.left =
+  `${pos.x}px`;
+
+  letter.style.top =
+  `${pos.y}px`;
+
+
+  letter.style.transform =
+  `translate(-50%,-50%)
+   rotate(${angle}deg)`;
+
+
+  parent.appendChild(
+    letter
+  );
+
+
+  return letter;
+
+}
+
+
+
+/* ===================================== */
+
+function createDivider(
+  parent,
+  r1,
+  r2,
+  angle,
+  size
+){
+
+  const radius =
+  (r1+r2)/2;
+
+  const length =
+  r2-r1;
+
+
+  const pos =
+  polarPosition(
+    size,
+    radius,
+    angle
+  );
+
+
+  const divider =
+  document.createElement(
+    "div"
+  );
+
+
+  divider.className =
+  "dividerSegment";
+
+
+  divider.style.height =
+  `${length}px`;
+
+  divider.style.left =
+  `${pos.x}px`;
+
+  divider.style.top =
+  `${pos.y}px`;
+
+
+  divider.style.transform =
+  `translate(-50%,-50%)
+   rotate(${angle}deg)`;
+
+
+  parent.appendChild(
+    divider
   );
 
 }
 
 
 
-function speedDelay(){
+/* ===================================== */
 
-  return 1000/
-  Number(
-    speedRange.value
+function createRingBorder(
+  parent,
+  radius
+){
+
+  const border =
+  document.createElement(
+    "div"
+  );
+
+
+  border.className =
+  "ringBorder";
+
+
+  border.style.width =
+  `${radius*2}px`;
+
+
+  border.style.height =
+  `${radius*2}px`;
+
+
+  parent.appendChild(
+    border
   );
 
 }
 
 
+
+/* ===================================== */
+
+function createWheel(){
+
+  outerRing.innerHTML = "";
+  innerRing.innerHTML = "";
+
+  outerLetters = [];
+  innerLetters = [];
+
+
+  const size =
+  wheel
+  .getBoundingClientRect()
+  .width;
+
+
+  const step =
+  360/26;
+
+
+  const outerOuter =
+  size*0.50;
+
+  const outerInner =
+  size*0.40;
+
+  const outerLettersRadius =
+  size*0.455;
+
+
+  const innerOuter =
+  size*0.395;
+
+  const innerInner =
+  size*0.25;
+
+  const innerLettersRadius =
+  size*0.325;
+
+
+
+  createRingBorder(
+    outerRing,
+    outerOuter
+  );
+
+  createRingBorder(
+    outerRing,
+    outerInner
+  );
+
+
+  createRingBorder(
+    innerRing,
+    innerOuter
+  );
+
+  createRingBorder(
+    innerRing,
+    innerInner
+  );
+
+
+
+  for(
+    let i=0;
+    i<26;
+    i++
+  ){
+
+    const angle =
+    i*step;
+
+
+    createDivider(
+      outerRing,
+      outerInner,
+      outerOuter,
+      angle-step/2,
+      size
+    );
+
+
+    createDivider(
+      innerRing,
+      innerInner,
+      innerOuter,
+      angle-step/2,
+      size
+    );
+
+
+
+    outerLetters.push(
+
+      createLetter(
+        outerRing,
+        alphabet[i],
+        "outerLetter",
+        outerLettersRadius,
+        angle,
+        size
+      )
+
+    );
+
+
+
+    innerLetters.push(
+
+      createLetter(
+        innerRing,
+        alphabet[i],
+        "innerLetter",
+        innerLettersRadius,
+        angle,
+        size
+      )
+
+    );
+
+  }
+
+}
+
+
+
+/* ===================================== */
+
+function updateWheel(){
+
+  shift =
+  normalizeShift(
+    shift
+  );
+
+
+  shiftInput.value =
+  shift;
+
+
+  const deg =
+  shift *
+  (360/26);
+
+
+  innerRing.style.transform =
+  `rotate(${-deg}deg)`;
+
+}
+
+
+
+/* ===================================== */
 
 function clearHighlights(){
 
@@ -91,6 +390,7 @@ function clearHighlights(){
       "clearHighlight"
     )
   );
+
 
   innerLetters.forEach(
     l=>l.classList.remove(
@@ -102,18 +402,22 @@ function clearHighlights(){
 
 
 
-function highlight(
+/* ===================================== */
+
+function highlightPair(
   clearIndex,
   cipherIndex
 ){
 
   clearHighlights();
 
+
   outerLetters[
     clearIndex
   ].classList.add(
     "clearHighlight"
   );
+
 
   innerLetters[
     cipherIndex
@@ -125,56 +429,62 @@ function highlight(
 
 
 
-function waitUser(){
+/* ===================================== */
 
-  return new Promise(
-    resolve=>{
-
-      waitingResolver=
-      resolve;
-
-      stepBtn.disabled=
-      false;
-
-    }
-  );
-
-}
-
-
-
-async function waitAnimation(){
+function waitDelay(){
 
   if(
     stepMode.checked
   ){
 
-    await waitUser();
+    return new Promise(
+      resolve=>{
 
-    return;
+        stepResolver =
+        resolve;
+
+        stepBtn.disabled =
+        false;
+
+      }
+    );
+
   }
 
-  await sleep(
-    speedDelay()
+
+  stepBtn.disabled =
+  true;
+
+
+  return new Promise(
+    resolve=>setTimeout(
+      resolve,
+      1000/
+      Number(
+        speedRange.value
+      )
+    )
   );
 
 }
 
 
 
-stepBtn.onclick=()=>{
+/* ===================================== */
+
+stepBtn.onclick = ()=>{
 
   if(
-    waitingResolver
+    stepResolver
   ){
 
-    const r=
-    waitingResolver;
+    const r =
+    stepResolver;
 
-    waitingResolver=
+    stepResolver =
     null;
 
-    stepBtn.disabled=
+    stepBtn.disabled =
     true;
 
     r();
@@ -185,32 +495,17 @@ stepBtn.onclick=()=>{
 
 
 
-function updateWheel(){
-
-  shift=
-  normalize(shift);
-
-  shiftInput.value=
-  shift;
-
-  const deg=
-  shift*(360/26);
-
-  innerRing.style.transform=
-  `rotate(${-deg}deg)`;
-
-}
-
-
+/* ===================================== */
 
 function rotateOneStep(){
 
   shift++;
 
-  shift=
-  normalize(
+  shift =
+  normalizeShift(
     shift
   );
+
 
   updateWheel();
 
@@ -218,152 +513,96 @@ function rotateOneStep(){
 
 
 
-function caesar(
+/* ===================================== */
+
+function caesarChar(
   char,
   amount
 ){
 
-  const index=
+  const index =
   alphabet.indexOf(
-    char.toUpperCase()
+    char
   );
 
-  const target=
-  normalize(
-    index+amount
-  );
 
   return alphabet[
-    target
+
+    normalizeShift(
+      index+
+      amount
+    )
+
   ];
 
 }
 
 
 
-async function animateEncrypt(){
+/* ===================================== */
+
+async function process(
+  encrypt=true
+){
 
   if(
     isAnimating
   ) return;
 
-  isAnimating=true;
 
-  shift=
+  isAnimating =
+  true;
+
+
+  shift =
   startShift;
 
+
   updateWheel();
-
-  cipherText.value="";
-
-  const text=
-  plainText.value
-  .toUpperCase();
-
-
-  for(
-    let i=0;
-    i<text.length;
-    i++
-  ){
-
-    const char=
-    text[i];
-
-    if(
-      !alphabet.includes(
-        char
-      )
-    ){
-
-      cipherText.value+=
-      char;
-
-      continue;
-
-    }
-
-
-    const clearIndex=
-    alphabet.indexOf(
-      char
-    );
-
-    const cipherIndex=
-    normalize(
-      clearIndex+
-      shift
-    );
-
-
-    highlight(
-      clearIndex,
-      cipherIndex
-    );
-
-
-    cipherText.value+=
-    caesar(
-      char,
-      shift
-    );
-
-
-    await waitAnimation();
-
-
-    if(
-      appMode==="plus"
-    ){
-
-      rotateOneStep();
-
-      await sleep(
-        250
-      );
-
-    }
-
-  }
 
 
   clearHighlights();
 
-  isAnimating=false;
 
-}
+  const input =
 
+  encrypt ?
 
+  plainText.value
+  .toUpperCase()
 
-async function animateDecrypt(){
+  :
 
-  if(
-    isAnimating
-  ) return;
-
-  isAnimating=true;
-
-  shift=
-  startShift;
-
-  updateWheel();
-
-  plainText.value="";
-
-  const text=
   cipherText.value
   .toUpperCase();
 
 
 
+  const outputField =
+
+  encrypt ?
+
+  cipherText
+
+  :
+
+  plainText;
+
+
+  outputField.value =
+  "";
+
+
+
   for(
     let i=0;
-    i<text.length;
+    i<input.length;
     i++
   ){
 
-    const char=
-    text[i];
+    const char =
+    input[i];
+
 
     if(
       !alphabet.includes(
@@ -371,7 +610,7 @@ async function animateDecrypt(){
       )
     ){
 
-      plainText.value+=
+      outputField.value +=
       char;
 
       continue;
@@ -379,32 +618,75 @@ async function animateDecrypt(){
     }
 
 
-    const cipherIndex=
-    alphabet.indexOf(
-      char
-    );
 
-    const clearIndex=
-    normalize(
-      cipherIndex-
-      shift
-    );
+    let clearIndex;
+    let cipherIndex;
 
 
-    highlight(
+
+    if(
+      encrypt
+    ){
+
+      clearIndex =
+      alphabet.indexOf(
+        char
+      );
+
+
+      cipherIndex =
+      normalizeShift(
+        clearIndex+
+        shift
+      );
+
+    }
+
+    else{
+
+      cipherIndex =
+      alphabet.indexOf(
+        char
+      );
+
+
+      clearIndex =
+      normalizeShift(
+        cipherIndex-
+        shift
+      );
+
+    }
+
+
+
+    highlightPair(
       clearIndex,
       cipherIndex
     );
 
 
-    plainText.value+=
-    caesar(
+
+    outputField.value +=
+
+    encrypt ?
+
+    caesarChar(
+      char,
+      shift
+    )
+
+    :
+
+    caesarChar(
       char,
       -shift
     );
 
 
-    await waitAnimation();
+
+    await waitDelay();
+
 
 
     if(
@@ -413,8 +695,11 @@ async function animateDecrypt(){
 
       rotateOneStep();
 
-      await sleep(
-        250
+      await new Promise(
+        resolve=>setTimeout(
+          resolve,
+          250
+        )
       );
 
     }
@@ -422,26 +707,31 @@ async function animateDecrypt(){
   }
 
 
+
   clearHighlights();
 
-  isAnimating=false;
+  isAnimating =
+  false;
 
 }
 
 
 
-encryptBtn.onclick=
-animateEncrypt;
+/* ===================================== */
 
-decryptBtn.onclick=
-animateDecrypt;
+encryptBtn.onclick =
+()=>process(true);
+
+decryptBtn.onclick =
+()=>process(false);
 
 
 
-speedRange.oninput=
+speedRange.oninput =
 ()=>{
 
-  speedValue.textContent=
+  speedValue.textContent =
+
   speedRange.value+
   " Zeichen/Sek.";
 
@@ -449,16 +739,18 @@ speedRange.oninput=
 
 
 
-shiftInput.oninput=
+shiftInput.oninput =
 ()=>{
 
-  shift=
+  shift =
   Number(
     shiftInput.value
   );
 
-  startShift=
+
+  startShift =
   shift;
+
 
   updateWheel();
 
@@ -466,6 +758,38 @@ shiftInput.oninput=
 
 
 
-speedValue.textContent=
+startAppBtn.onclick =
+()=>{
+
+  appMode =
+  modeSelect.value;
+
+
+  setupModal.style.display =
+  "none";
+
+};
+
+
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    createWheel();
+
+    updateWheel();
+
+  }
+);
+
+
+
+createWheel();
+
+updateWheel();
+
+speedValue.textContent =
+
 speedRange.value+
 " Zeichen/Sek.";
