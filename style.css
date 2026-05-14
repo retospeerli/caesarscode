@@ -147,6 +147,23 @@ p {
 .panel h2 {
   margin: 0 0 18px;
   font-size: 1.55rem;
+  font-weight: 900;
+}
+/* linker Titel = Klartext = grün */
+
+.panel:first-child h2 {
+  color: #16a34a;
+  text-shadow:
+    0 0 8px rgba(34,197,94,0.35);
+}
+
+
+/* rechter Titel = Geheimtext = rot */
+
+.panel:last-child h2 {
+  color: #dc2626;
+  text-shadow:
+    0 0 8px rgba(220,38,38,0.35);
 }
 
 textarea {
