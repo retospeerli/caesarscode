@@ -1,426 +1,471 @@
-const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-const plainText = document.getElementById("plainText");
-const cipherText = document.getElementById("cipherText");
-const encryptBtn = document.getElementById("encryptBtn");
-const decryptBtn = document.getElementById("decryptBtn");
-const shiftInput = document.getElementById("shiftInput");
+const plainText=document.getElementById("plainText");
+const cipherText=document.getElementById("cipherText");
 
-const wheel = document.getElementById("wheel");
-const outerRing = document.getElementById("outerRing");
-const innerRing = document.getElementById("innerRing");
+const encryptBtn=document.getElementById("encryptBtn");
+const decryptBtn=document.getElementById("decryptBtn");
 
-const setupModal = document.getElementById("setupModal");
-const modeSelect = document.getElementById("modeSelect");
-const startAppBtn = document.getElementById("startAppBtn");
+const shiftInput=document.getElementById("shiftInput");
 
-const speedRange = document.getElementById("speedRange");
-const speedValue = document.getElementById("speedValue");
-const stepMode = document.getElementById("stepMode");
-const stepBtn = document.getElementById("stepBtn");
+const wheel=document.getElementById("wheel");
+const outerRing=document.getElementById("outerRing");
+const innerRing=document.getElementById("innerRing");
 
-let shift = 3;
-let startShift = 3;
-let appMode = "classic";
-let dragging = false;
-let isAnimating = false;
-let stepResolver = null;
+const speedRange=document.getElementById("speedRange");
+const speedValue=document.getElementById("speedValue");
 
-let outerLetters = [];
-let innerLetters = [];
+const stepMode=document.getElementById("stepMode");
+const stepBtn=document.getElementById("stepBtn");
 
-function normalizeShift(value) {
-  return ((Number(value) % 26) + 26) % 26;
+const modeSelect=document.getElementById("modeSelect");
+const startAppBtn=document.getElementById("startAppBtn");
+const setupModal=document.getElementById("setupModal");
+
+
+let shift=3;
+let startShift=3;
+
+let appMode="classic";
+
+let outerLetters=[];
+let innerLetters=[];
+
+let dragging=false;
+
+let waitingResolver=null;
+
+let isAnimating=false;
+
+
+
+startAppBtn.onclick=()=>{
+
+  appMode=
+  modeSelect.value;
+
+  setupModal.style.display=
+  "none";
+
+};
+
+
+
+
+function normalize(v){
+
+  return ((v%26)+26)%26;
+
 }
 
-function caesarChar(char, amount) {
-  const upper = char.toUpperCase();
 
-  if (!alphabet.includes(upper)) {
-    return char;
-  }
 
-  const oldIndex = alphabet.indexOf(upper);
-  const newIndex = normalizeShift(oldIndex + amount);
-  const result = alphabet[newIndex];
+function sleep(ms){
 
-  return char === char.toLowerCase()
-    ? result.toLowerCase()
-    : result;
+  return new Promise(
+    resolve=>setTimeout(
+      resolve,
+      ms
+    )
+  );
+
 }
 
-function polarPosition(size, radius, angleDeg) {
-  const angleRad = angleDeg * Math.PI / 180;
 
-  return {
-    x: size / 2 + Math.sin(angleRad) * radius,
-    y: size / 2 - Math.cos(angleRad) * radius
-  };
+
+function speedDelay(){
+
+  return 1000/
+  Number(
+    speedRange.value
+  );
+
 }
 
-function createLetter(parent, char, className, radius, angle, size, index) {
-  const pos = polarPosition(size, radius, angle);
 
-  const letter = document.createElement("div");
-  letter.className = `letter ${className}`;
-  letter.textContent = char;
-  letter.dataset.index = index;
 
-  letter.style.left = `${pos.x}px`;
-  letter.style.top = `${pos.y}px`;
-  letter.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+function clearHighlights(){
 
-  parent.appendChild(letter);
+  outerLetters.forEach(
+    l=>l.classList.remove(
+      "clearHighlight"
+    )
+  );
 
-  return letter;
+  innerLetters.forEach(
+    l=>l.classList.remove(
+      "cipherHighlight"
+    )
+  );
+
 }
 
-function createDivider(parent, radiusInner, radiusOuter, angle, size) {
-  const radiusMiddle = (radiusInner + radiusOuter) / 2;
-  const length = radiusOuter - radiusInner;
-  const pos = polarPosition(size, radiusMiddle, angle);
 
-  const divider = document.createElement("div");
-  divider.className = "dividerSegment";
 
-  divider.style.height = `${length}px`;
-  divider.style.left = `${pos.x}px`;
-  divider.style.top = `${pos.y}px`;
-  divider.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+function highlight(
+  clearIndex,
+  cipherIndex
+){
 
-  parent.appendChild(divider);
-}
-
-function createRingBorder(parent, radius) {
-  const border = document.createElement("div");
-  border.className = "ringBorder";
-
-  border.style.width = `${radius * 2}px`;
-  border.style.height = `${radius * 2}px`;
-
-  parent.appendChild(border);
-}
-
-function createWheel() {
-  outerRing.innerHTML = "";
-  innerRing.innerHTML = "";
-
-  outerLetters = [];
-  innerLetters = [];
-
-  const size = wheel.getBoundingClientRect().width;
-  const step = 360 / 26;
-
-  const outerOuterRadius = size * 0.50;
-  const outerInnerRadius = size * 0.40;
-  const outerLetterRadius = size * 0.455;
-
-  const innerOuterRadius = size * 0.395;
-  const innerInnerRadius = size * 0.25;
-  const innerLetterRadius = size * 0.325;
-
-  createRingBorder(outerRing, outerOuterRadius);
-  createRingBorder(outerRing, outerInnerRadius);
-
-  createRingBorder(innerRing, innerOuterRadius);
-  createRingBorder(innerRing, innerInnerRadius);
-
-  for (let i = 0; i < 26; i++) {
-    const angle = i * step;
-    const dividerAngle = angle - step / 2;
-
-    createDivider(
-      outerRing,
-      outerInnerRadius,
-      outerOuterRadius,
-      dividerAngle,
-      size
-    );
-
-    createDivider(
-      innerRing,
-      innerInnerRadius,
-      innerOuterRadius,
-      dividerAngle,
-      size
-    );
-
-    outerLetters[i] = createLetter(
-      outerRing,
-      alphabet[i],
-      "outerLetter",
-      outerLetterRadius,
-      angle,
-      size,
-      i
-    );
-
-    innerLetters[i] = createLetter(
-      innerRing,
-      alphabet[i],
-      "innerLetter",
-      innerLetterRadius,
-      angle,
-      size,
-      i
-    );
-  }
-}
-
-function updateWheel() {
-  shift = normalizeShift(shift);
-  shiftInput.value = shift;
-
-  const degrees = shift * (360 / 26);
-
-  /*
-    Wichtig:
-    Die innere Scheibe wird gegen den Uhrzeigersinn gedreht.
-    So liegt bei Verschiebung 3 das innere D beim äußeren A.
-  */
-  innerRing.style.transform = `rotate(${-degrees}deg)`;
-}
-
-function clearHighlights() {
-  outerLetters.forEach(letter => {
-    letter.classList.remove("clearHighlight");
-  });
-
-  innerLetters.forEach(letter => {
-    letter.classList.remove("cipherHighlight");
-  });
-}
-
-function highlightPair(clearIndex, cipherIndex) {
   clearHighlights();
 
-  if (outerLetters[clearIndex]) {
-    outerLetters[clearIndex].classList.add("clearHighlight");
+  outerLetters[
+    clearIndex
+  ].classList.add(
+    "clearHighlight"
+  );
+
+  innerLetters[
+    cipherIndex
+  ].classList.add(
+    "cipherHighlight"
+  );
+
+}
+
+
+
+function waitUser(){
+
+  return new Promise(
+    resolve=>{
+
+      waitingResolver=
+      resolve;
+
+      stepBtn.disabled=
+      false;
+
+    }
+  );
+
+}
+
+
+
+async function waitAnimation(){
+
+  if(
+    stepMode.checked
+  ){
+
+    await waitUser();
+
+    return;
   }
 
-  if (innerLetters[cipherIndex]) {
-    innerLetters[cipherIndex].classList.add("cipherHighlight");
-  }
+  await sleep(
+    speedDelay()
+  );
+
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-function sleepDynamic() {
-  const speed = Number(speedRange.value);
-  const duration = 1000 / speed;
-  return sleep(duration);
-}
 
-function waitForStep() {
-  return new Promise(resolve => {
-    stepResolver = resolve;
-    stepBtn.disabled = false;
-  });
-}
+stepBtn.onclick=()=>{
 
-function waitAccordingToControls() {
-  if (stepMode.checked) {
-    return waitForStep();
-  }
+  if(
+    waitingResolver
+  ){
 
-  stepBtn.disabled = true;
-  return sleepDynamic();
-}
+    const r=
+    waitingResolver;
 
-function setShiftFromPointer(event) {
-  if (isAnimating) return;
+    waitingResolver=
+    null;
 
-  const rect = wheel.getBoundingClientRect();
+    stepBtn.disabled=
+    true;
 
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
+    r();
 
-  const x = event.clientX - centerX;
-  const y = event.clientY - centerY;
-
-  let angle = Math.atan2(y, x) * 180 / Math.PI + 90;
-
-  if (angle < 0) {
-    angle += 360;
   }
 
-  shift = Math.round(angle / (360 / 26)) % 26;
-  startShift = shift;
+};
+
+
+
+function updateWheel(){
+
+  shift=
+  normalize(shift);
+
+  shiftInput.value=
+  shift;
+
+  const deg=
+  shift*(360/26);
+
+  innerRing.style.transform=
+  `rotate(${-deg}deg)`;
+
+}
+
+
+
+function rotateOneStep(){
+
+  shift++;
+
+  shift=
+  normalize(
+    shift
+  );
 
   updateWheel();
+
 }
 
-async function rotateOneStepForPlus() {
-  clearHighlights();
 
-  shift = normalizeShift(shift + 1);
-  updateWheel();
 
-  if (stepMode.checked) {
-    await waitForStep();
-  } else {
-    await sleep(320);
-  }
+function caesar(
+  char,
+  amount
+){
+
+  const index=
+  alphabet.indexOf(
+    char.toUpperCase()
+  );
+
+  const target=
+  normalize(
+    index+amount
+  );
+
+  return alphabet[
+    target
+  ];
+
 }
 
-async function animateEncrypt() {
-  if (isAnimating) return;
 
-  isAnimating = true;
-  clearHighlights();
 
-  shift = startShift;
+async function animateEncrypt(){
+
+  if(
+    isAnimating
+  ) return;
+
+  isAnimating=true;
+
+  shift=
+  startShift;
+
   updateWheel();
 
-  const input = plainText.value;
-  cipherText.value = "";
+  cipherText.value="";
 
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-    const upper = char.toUpperCase();
+  const text=
+  plainText.value
+  .toUpperCase();
 
-    if (!alphabet.includes(upper)) {
-      cipherText.value += char;
+
+  for(
+    let i=0;
+    i<text.length;
+    i++
+  ){
+
+    const char=
+    text[i];
+
+    if(
+      !alphabet.includes(
+        char
+      )
+    ){
+
+      cipherText.value+=
+      char;
+
       continue;
+
     }
 
-    const clearIndex = alphabet.indexOf(upper);
-    const cipherIndex = normalizeShift(clearIndex + shift);
 
-    highlightPair(clearIndex, cipherIndex);
+    const clearIndex=
+    alphabet.indexOf(
+      char
+    );
 
-    cipherText.value += caesarChar(char, shift);
+    const cipherIndex=
+    normalize(
+      clearIndex+
+      shift
+    );
 
-    await waitAccordingToControls();
 
-    if (appMode === "plus") {
-      await rotateOneStepForPlus();
+    highlight(
+      clearIndex,
+      cipherIndex
+    );
+
+
+    cipherText.value+=
+    caesar(
+      char,
+      shift
+    );
+
+
+    await waitAnimation();
+
+
+    if(
+      appMode==="plus"
+    ){
+
+      rotateOneStep();
+
+      await sleep(
+        250
+      );
+
     }
+
   }
 
+
   clearHighlights();
-  isAnimating = false;
-  stepBtn.disabled = true;
+
+  isAnimating=false;
+
 }
 
-async function animateDecrypt() {
-  if (isAnimating) return;
 
-  isAnimating = true;
-  clearHighlights();
 
-  shift = startShift;
+async function animateDecrypt(){
+
+  if(
+    isAnimating
+  ) return;
+
+  isAnimating=true;
+
+  shift=
+  startShift;
+
   updateWheel();
 
-  const input = cipherText.value;
-  plainText.value = "";
+  plainText.value="";
 
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-    const upper = char.toUpperCase();
+  const text=
+  cipherText.value
+  .toUpperCase();
 
-    if (!alphabet.includes(upper)) {
-      plainText.value += char;
+
+
+  for(
+    let i=0;
+    i<text.length;
+    i++
+  ){
+
+    const char=
+    text[i];
+
+    if(
+      !alphabet.includes(
+        char
+      )
+    ){
+
+      plainText.value+=
+      char;
+
       continue;
+
     }
 
-    const cipherIndex = alphabet.indexOf(upper);
-    const clearIndex = normalizeShift(cipherIndex - shift);
 
-    highlightPair(clearIndex, cipherIndex);
+    const cipherIndex=
+    alphabet.indexOf(
+      char
+    );
 
-    plainText.value += caesarChar(char, -shift);
+    const clearIndex=
+    normalize(
+      cipherIndex-
+      shift
+    );
 
-    await waitAccordingToControls();
 
-    if (appMode === "plus") {
-      await rotateOneStepForPlus();
+    highlight(
+      clearIndex,
+      cipherIndex
+    );
+
+
+    plainText.value+=
+    caesar(
+      char,
+      -shift
+    );
+
+
+    await waitAnimation();
+
+
+    if(
+      appMode==="plus"
+    ){
+
+      rotateOneStep();
+
+      await sleep(
+        250
+      );
+
     }
+
   }
+
 
   clearHighlights();
-  isAnimating = false;
-  stepBtn.disabled = true;
+
+  isAnimating=false;
+
 }
 
-encryptBtn.addEventListener("click", animateEncrypt);
-decryptBtn.addEventListener("click", animateDecrypt);
 
-shiftInput.addEventListener("input", () => {
-  if (isAnimating) return;
 
-  shift = normalizeShift(shiftInput.value);
-  startShift = shift;
+encryptBtn.onclick=
+animateEncrypt;
+
+decryptBtn.onclick=
+animateDecrypt;
+
+
+
+speedRange.oninput=
+()=>{
+
+  speedValue.textContent=
+  speedRange.value+
+  " Zeichen/Sek.";
+
+};
+
+
+
+shiftInput.oninput=
+()=>{
+
+  shift=
+  Number(
+    shiftInput.value
+  );
+
+  startShift=
+  shift;
+
   updateWheel();
-});
 
-speedRange.addEventListener("input", () => {
-  speedValue.textContent = `${speedRange.value} Zeichen/Sek.`;
-});
+};
 
-stepMode.addEventListener("change", () => {
-  stepBtn.disabled = !stepMode.checked || !isAnimating;
-});
 
-stepBtn.addEventListener("click", () => {
-  if (stepResolver) {
-    const resolve = stepResolver;
-    stepResolver = null;
-    stepBtn.disabled = true;
-    resolve();
-  }
-});
 
-startAppBtn.addEventListener("click", () => {
-  appMode = modeSelect.value;
-  startShift = shift;
-  setupModal.style.display = "none";
-});
-
-document.addEventListener("keydown", event => {
-  if (event.key === "Enter" && event.ctrlKey) {
-    if (document.activeElement === cipherText) {
-      animateDecrypt();
-    } else {
-      animateEncrypt();
-    }
-  }
-
-  if (event.key === " " && stepMode.checked && isAnimating) {
-    event.preventDefault();
-    stepBtn.click();
-  }
-});
-
-innerRing.addEventListener("pointerdown", event => {
-  if (isAnimating) return;
-
-  dragging = true;
-  innerRing.setPointerCapture(event.pointerId);
-  setShiftFromPointer(event);
-});
-
-innerRing.addEventListener("pointermove", event => {
-  if (dragging) {
-    setShiftFromPointer(event);
-  }
-});
-
-innerRing.addEventListener("pointerup", () => {
-  dragging = false;
-});
-
-innerRing.addEventListener("pointercancel", () => {
-  dragging = false;
-});
-
-window.addEventListener("resize", () => {
-  createWheel();
-  updateWheel();
-});
-
-createWheel();
-updateWheel();
-speedValue.textContent = `${speedRange.value} Zeichen/Sek.`;
+speedValue.textContent=
+speedRange.value+
+" Zeichen/Sek.";
